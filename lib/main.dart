@@ -1,5 +1,4 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
@@ -10,18 +9,9 @@ import 'package:tiger/screens/bonus/bonus_screen.dart';
 import 'package:tiger/screens/slots/slots_screen.dart';
 import 'package:tiger/screens/wheel/wheel_screen.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  await FirebaseRemoteConfig.instance.setConfigSettings(RemoteConfigSettings(
-    fetchTimeout: const Duration(seconds: 8),
-    minimumFetchInterval: const Duration(seconds: 8),
-  ));
-
-  await FirebaseRemoteConfig.instance.fetchAndActivate();
-
   await NotificationServiceFb().activate();
   final db = await SharedPreferences.getInstance();
   runApp(MyApp(db: db));
@@ -43,44 +33,20 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _init();
+
   }
 
-  void _init() async {
-    final checkBonus = FirebaseRemoteConfig.instance.getString('bonus');
-    if (!checkBonus.contains('noBonus')) {
-      bonus = checkBonus;
-      setState(() {
-        loaded = true;
-      });
-      return;
-    }
-
-    // await Future.delayed(const Duration(seconds: 2));
-
-    onb = widget.db.getBool('onb') ?? false;
-    setState(() {
-      loaded = true;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Provider.value(
       value: widget.db,
       child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          scaffoldBackgroundColor: const Color(0xFF620000),
-        ),
-        home: loaded
-            ? bonus != null
-                ? MainScren(bonus: bonus!)
-                : onb
-                    ? const MainScreen()
-                    : const OnBoardingScreen()
-            : const LoadingScreen(),
-      ),
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            scaffoldBackgroundColor: const Color(0xFF620000),
+          ),
+          home: onb ? const MainScreen() : const OnBoardingScreen()),
     );
   }
 }
